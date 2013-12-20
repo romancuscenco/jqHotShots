@@ -48,4 +48,48 @@
             positions.push({ top: top, left: left });
         }
     }
+
+    // remove original image as it is no longer needed
+    img.remove();
+
+    // remove the first piece of the puzzle
+    container.find("#0").remove();
+
+    // remove the first item in the array
+    positions.shift();
+
+    $("#start").on("click", function (e) {
+        var pieces = imgContainer.children();
+
+        function shuffle(array) {
+            var i = array.length;
+
+            if (i === 0) {
+                return false;
+            }
+
+            while (--i) {
+                var j = Math.floor(Math.random() * (i + 1)),
+                    tempi = array[i],
+                    tempj = array[j];
+
+                array[i] = tempj;
+                array[j] = tempi;
+            }
+        }
+
+        shuffle(pieces);
+
+        $.each(pieces, function (i) {
+            pieces.eq(i).css(positions[i]);
+        });
+
+        pieces.appendTo(imgContainer);
+
+        empty.top = 0;
+        empty.left = 0;
+
+        container.find("#ui").find("p").not("#time").remove();
+    });
+
 });
