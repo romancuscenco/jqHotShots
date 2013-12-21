@@ -90,6 +90,34 @@
         empty.left = 0;
 
         container.find("#ui").find("p").not("#time").remove();
+
+        //dragging
+        pieces.draggable({
+            containment: "parent",
+            grid: [pieceW, pieceH],
+            start: function (e, ui) {
+                var current = getPosition(ui.helper);
+
+                if (current.left === empty.left) {
+                    ui.helper.draggable("option", "axis", "y");
+                }
+                else if (current.top === empty.top) {
+                    ui.helper.draggable("option", "axis", "x")
+                }
+                else {
+
+                }
+            },
+            drag: function (e, ui) {
+
+            },
+            stop: function (e, ui) {
+
+            }
+        });
+        //end of dragging
+
     });
+    //end of #start click
 
 });
