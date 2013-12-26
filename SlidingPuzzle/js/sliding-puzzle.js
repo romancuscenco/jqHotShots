@@ -105,11 +105,24 @@
                     ui.helper.draggable("option", "axis", "x")
                 }
                 else {
-
+                    ui.helper.trigger("mouseup");
+                    return false;
                 }
+
+                if (current.bottom < empty.top ||
+                    current.top > empty.bottom ||
+                    current.left > empty.right ||
+                    current.right < empty.left)
+                {
+                    ui.helper.trigger("mouseup");
+                    return false;
+                }
+
+                previous.top = current.top;
+                previous.left = current.left;
             },
             drag: function (e, ui) {
-
+                var 
             },
             stop: function (e, ui) {
 
