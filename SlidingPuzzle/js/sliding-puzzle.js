@@ -1,6 +1,6 @@
 ﻿$(function () {
-    var numberOFPieces = 12,
-        aspect = "3:4",
+    var numberOFPieces = 9,
+        aspect = "3:3",
         aspectW = parseInt(aspect.split(':')[0]),
         aspectH = parseInt(aspect.split(':')[1]),
         container = $("#puzzle"),
@@ -91,6 +91,40 @@
 
         container.find("#ui").find("p").not("#time").remove();
 
+        if (timer) {
+            clearInterval(timer);
+            timerDisplay.text("00:00:00");
+        }
+
+        timer = setInterval(updateTime, 1000);
+        currentTime.seconds = 0;
+        currentTime.minutes = 0;
+        currentTime.hours = 0;
+
+        function updateTime() {
+            if (currentTime.hours === 23 && currentTime.minutes === 59 && currentTime.seconds === 59) {
+                clearInterval(timer);
+            }
+            else if (currentTime.minutes === 59 && currentTime.seconds === 59) {
+                currentTime.hours++;                
+                currentTime.minutes = 0;
+                currentTime.seconds = 0;
+            }
+            else if (currentTime.seconds === 59) {
+                currentTime.minutes++;
+                currentTime.seconds = 0;
+            }
+            else {
+                currentTime.seconds++;
+            }
+
+            newHours = (currentTime.hours <= 9) ? "0" + currentTime.hours : currentTime.hours;
+            newMins = (currentTime.minutes <= 9) ? "0" + currentTime.minutes : currentTime.minutes;
+            newSecs = (currentTime.seconds <= 9) ? "0" + currentTime.seconds : currentTime.seconds;
+
+            timerDisplay.text([newHours, ":", newMins, ":", newSecs].join(""));
+        }
+
         //dragging
         pieces.draggable({
             containment: "parent",
@@ -122,13 +156,82 @@
                 previous.left = current.left;
             },
             drag: function (e, ui) {
-                var 
+                var current = getPosition(ui.helper);
+
+                ui.helper.draggable("option", "revert", false);
+
+                if (current.top === empty.top && current.left === empty.left) {
+                    ui.helper.trigger("mouseup");
+                    return false;
+                }
+
+                if (current.top > empty.bottom ||
+                    current.bottom < empty.top ||
+                    current.left > empty.right ||
+                    current.right < empty.left)
+                {
+                    ui.helper.trigger("mouseup").css({
+                        top: previous.top,
+                        left: previous.left
+                    });
+
+                    return false;
+                }
             },
             stop: function (e, ui) {
+                var current = getPosition(ui.helper),
+                    correctPieces = 0;
 
+                if (current.top === empty.top && current.left === empty.left) {
+                    empty.top = previous.top;
+                    empty.left = previous.left;
+                    empty.bottom = previous.top + pieceH;
+                    empty.right = previous.left + pieceW;
+                }
+
+                $.each(positions, function (i) {
+                    var currentPiece = $("#" + (i + 1)),
+                        currentPosition = getPosition(currentPiece);
+
+                    if (positions[i].top === currentPosition.top &&
+                        positions[i].left === currentPosition.left)
+                    {
+                        correctPieces++;
+                    }
+                });
+
+                if (correctPieces === positions.length) {
+                    clearInterval(timer);
+                    $("<p />", { text: "Congratulations! You solved the puzzle!" }).appendTo("#ui");
+
+                    var totalSeconds = (currentTime.hours * 60 * 60) + (currentTime.minutes * 60) + currentTime.seconds;
+
+                    if (localStorage.getItem("puzzleBestTime")) {
+                        var bestTime = localStorage.getItem("puzzleBestTime");
+
+                        if (totalSeconds < bestTime) {
+                            localStorage.setItem("puzzleBestTime", totalSeconds);
+
+                            $("<p />", { text: "You got a new best time!" }).appendTo("#ui");
+                        }
+                    }
+                    else {
+                        localStorage.setItem("puzzleBestTime", totalSeconds);
+                        $("<p />", { text: "You got a new best time!" }).appendTo("#ui");
+                    }
+                }
             }
         });
         //end of dragging
+
+        function getPosition(el) {
+            return {
+                top: parseInt(el.css("top")),
+                bottom: parseInt(el.css("top")) + pieceH,
+                left: parseInt(el.css("left")),
+                right: parseInt(el.css("left")) + pieceW
+            };
+        }
 
     });
     //end of #start click
